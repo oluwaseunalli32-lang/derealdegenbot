@@ -1,5 +1,6 @@
 import os
 import logging
+import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ContextTypes
 
@@ -42,6 +43,14 @@ def main() -> None:
     if not TOKEN:
         logger.error("No TOKEN found in environment variables!")
         return
+
+    # Fix for Python 3.14+ event loop management
+    try:
+        asyncio.get_event_loop()
+    except RuntimeError:
+        logger.info("No event loop found. Creating a new event loop for Python 3.14...")
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
 
     # Build the application
     application = Application.builder().token(TOKEN).build()
