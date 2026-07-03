@@ -11,8 +11,6 @@ logger = logging.getLogger(__name__)
 
 # Constants
 TOKEN = os.getenv("TOKEN")
-PORT = int(os.getenv("PORT", "8000"))
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # Render URL e.g., https://your-app.onrender.com
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Sends a message with inline buttons when the command /start is issued."""
@@ -36,11 +34,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     
     reply_markup = InlineKeyboardMarkup(keyboard)
     
-    # Using HTML parse mode to prevent markdown crashes
+    # Using HTML parse mode to prevent formatting crashes
     await update.message.reply_text(text=welcome_text, reply_markup=reply_markup, parse_mode="HTML")
 
 def main() -> None:
-    """Start the bot."""
+    """Start the bot using polling as a continuous background worker."""
     if not TOKEN:
         logger.error("No TOKEN found in environment variables!")
         return
@@ -51,18 +49,9 @@ def main() -> None:
     # Register the /start command handler
     application.add_handler(CommandHandler("start", start))
 
-    # Check if deploying to Render via Webhook or running locally via Polling
-    if WEBHOOK_URL:
-        logger.info(True)
-        application.run_webhook(
-            listen="0.0.0.0",
-            port=PORT,
-            url_path=TOKEN,
-            webhook_url=f"{WEBHOOK_URL}/{TOKEN}"
-        )
-    else:
-        logger.info("Starting local polling...")
-        application.run_polling()
+    # Continuous long-polling perfect for background workers
+    logger.info("DeRealDegen Bot worker starting polling...")
+    application.run_polling()
 
 if __name__ == "__main__":
     main()
